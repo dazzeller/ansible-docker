@@ -1,0 +1,41 @@
+- hosts: all
+  tasks:
+  - name: "creating a docker repository"
+    yum_repository:
+           description: "docker repo"
+           name: "docker-ce"
+           baseurl: "http://download.docker.com/linux/centos/7/x86_64/stable"
+           gpgcheck: "no"
+
+  - name: "installing docker software in target node"
+    package:
+           name: "docker-ce-18.09.1-3.el7.x86_64"
+           state: present
+
+  - name: "starting docker service in target node"
+    service:
+           name: docker
+           state: started
+
+  - pip:
+           name: docker-py
+
+  - name: "pulling docker image to the target node"
+    docker_image: 
+           name: httpd
+           source: pull
+
+  - name: "copy the file into the /home in target node"
+    copy:
+           src: /root/index.html
+           dest: /home
+
+  - name: "creating docker container with httpd image in target node"
+    community.general.docker_container:
+            name: webos
+            image: httpd
+            ports:
+                   - "82:80"
+            state: started
+            detach: yes
+            volumes: /home/:/usr/local/apache2/htdocs/
